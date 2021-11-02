@@ -1,22 +1,20 @@
 const { response } = require("express");
 const bcryptjs = require('bcryptjs');
 const Usuario = require('../models/usuario');
-
-const usuariosGet = (req, res) => {
-    const { q, nombre = 'no name', apikey} = req.query;
-  res.json({ msg: "get API controller", q, nombre, apikey });
+ 
+const usuariosGet = async(req, res) => {
+  const { limite = 5, desde = 0 } = req.query;
+  const usuarios = await Usuario.find()
+                .limit(Number(limite))
+                .skip(Number(desde));
+  res.json(usuarios);
 };
 
 const usuariosPost = async (req, res) => {
 
   const { nombre, correo, password, rol } = req.body;
   const usuario = new Usuario({ nombre, correo, password, rol });
-  
-  //verificar si existe el correo
-  const existeEmail = await Usuario.findOne({ correo });
-  if (existeEmail) {
-    return res.status(400).json("ese correo ya está registrado");
-  }
+
 
   //Encriptar la contraseña
   const salt = bcryptjs.genSaltSync();
@@ -29,9 +27,17 @@ const usuariosDelete = (req, res) => {
   res.json({ msg: "delete API" });
 };
 
-const usuariosPut = (req, res) => {
+const usuariosPut = async(req, res) => {
     const id = req.params.id;
-  res.json({ msg: "put API", id });
+    const { _id, password, google, correo, ...resto } = req.body;
+
+    if(password) {
+      const salt = bcryptjs.genSaltSync();
+      resto.password = bcryptjs.hashSync(password, salt);
+    }
+    //todo validar id contra db
+    const usuario = await Usuario.findByIdAndUpdate(id, resto)
+  res.json({ msg: "put API", usuario });
 };
 
 module.exports = {
