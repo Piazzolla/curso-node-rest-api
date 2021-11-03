@@ -21,6 +21,11 @@ router.post("/",[
   check('correo').custom( esMailExistente ),
   validarCampos
 ], usuariosPost);
-router.delete("/", usuariosDelete);
+router.delete("/:id",[
+  check('id', 'No es un Id válido').isMongoId(),
+  check('id').custom(esUsuarioExistente),
+  validarCampos
+
+], usuariosDelete);
 
 module.exports = router;
